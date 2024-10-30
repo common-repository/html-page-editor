@@ -1,0 +1,897 @@
+/* BASICS */
+.visible-xs {
+    display: none;
+}
+.CodeMirror {
+    /* Set height, width, borders, and global font properties here */
+    font-family: monospace;
+    height: 300px;
+    color: black;
+    direction: ltr;
+}
+
+/* PADDING */
+
+.CodeMirror-lines {
+    padding: 4px 0; /* Vertical padding around content */
+}
+.CodeMirror pre {
+    padding: 0 1%; /* Horizontal padding of content */
+}
+
+.CodeMirror-scrollbar-filler, .CodeMirror-gutter-filler {
+    background-color: white; /* The little square between H and V scrollbars */
+}
+
+/* GUTTER */
+
+.CodeMirror-gutters {
+    border-right: 1px solid #ddd;
+    background-color: #f7f7f7;
+    white-space: nowrap;
+}
+.CodeMirror-linenumbers {}
+.CodeMirror-linenumber {
+    padding: 0 3px 0 5px;
+    min-width: 20px;
+    text-align: right;
+    color: #999;
+    white-space: nowrap;
+}
+
+.CodeMirror-guttermarker { color: black; }
+.CodeMirror-guttermarker-subtle { color: #999; }
+
+/* CURSOR */
+
+.CodeMirror-cursor {
+    border-left: 1px solid black;
+    border-right: none;
+    width: 0;
+}
+/* Shown when moving in bi-directional text */
+.CodeMirror div.CodeMirror-secondarycursor {
+    border-left: 1px solid silver;
+}
+.cm-fat-cursor .CodeMirror-cursor {
+    width: auto;
+    border: 0 !important;
+    background: #7e7;
+}
+.cm-fat-cursor div.CodeMirror-cursors {
+    z-index: 1;
+}
+
+.cm-animate-fat-cursor {
+    width: auto;
+    border: 0;
+    -webkit-animation: blink 1.06s steps(1) infinite;
+    -moz-animation: blink 1.06s steps(1) infinite;
+    animation: blink 1.06s steps(1) infinite;
+    background-color: #7e7;
+}
+@-moz-keyframes blink {
+    0% {}
+    50% { background-color: transparent; }
+    100% {}
+}
+@-webkit-keyframes blink {
+    0% {}
+    50% { background-color: transparent; }
+    100% {}
+}
+@keyframes blink {
+    0% {}
+    50% { background-color: transparent; }
+    100% {}
+}
+
+/* Can style cursor different in overwrite (non-insert) mode */
+.CodeMirror-overwrite .CodeMirror-cursor {}
+
+.cm-tab { display: inline-block; text-decoration: inherit; }
+
+.CodeMirror-rulers {
+    position: absolute;
+    left: 0; right: 0; top: -50px; bottom: -20px;
+    overflow: hidden;
+}
+.CodeMirror-ruler {
+    border-left: 1px solid #ccc;
+    top: 0; bottom: 0;
+    position: absolute;
+}
+
+/* DEFAULT THEME */
+
+.cm-s-default .cm-header {color: blue;}
+.cm-s-default .cm-quote {color: #090;}
+.cm-negative {color: #d44;}
+.cm-positive {color: #292;}
+.cm-header, .cm-strong {font-weight: bold;}
+.cm-em {font-style: italic;}
+.cm-link {text-decoration: underline;}
+.cm-strikethrough {text-decoration: line-through;}
+
+.cm-s-default .cm-keyword {color: #708;}
+.cm-s-default .cm-atom {color: #219;}
+.cm-s-default .cm-number {color: #164;}
+.cm-s-default .cm-def {color: #00f;}
+.cm-s-default .cm-variable,
+.cm-s-default .cm-punctuation,
+.cm-s-default .cm-property,
+.cm-s-default .cm-operator {}
+.cm-s-default .cm-variable-2 {color: #05a;}
+.cm-s-default .cm-variable-3, .cm-s-default .cm-type {color: #085;}
+.cm-s-default .cm-comment {color: #a50;}
+.cm-s-default .cm-string {color: #a11;}
+.cm-s-default .cm-string-2 {color: #f50;}
+.cm-s-default .cm-meta {color: #555;}
+.cm-s-default .cm-qualifier {color: #555;}
+.cm-s-default .cm-builtin {color: #30a;}
+.cm-s-default .cm-bracket {color: #997;}
+.cm-s-default .cm-tag {color: #170;}
+.cm-s-default .cm-attribute {color: #00c;}
+.cm-s-default .cm-hr {color: #999;}
+.cm-s-default .cm-link {color: #00c;}
+
+.cm-s-default .cm-error {color: #f00;}
+.cm-invalidchar {color: #f00;}
+
+.CodeMirror-composing { border-bottom: 2px solid; }
+
+/* Default styles for common addons */
+
+div.CodeMirror span.CodeMirror-matchingbracket {color: #0f0;}
+div.CodeMirror span.CodeMirror-nonmatchingbracket {color: #f22;}
+.CodeMirror-matchingtag { background: rgba(255, 150, 0, .3); }
+.CodeMirror-activeline-background {background: #e8f2ff;}
+
+/* STOP */
+
+/* The rest of this file contains styles related to the mechanics of
+   the editor. You probably shouldn't touch them. */
+
+.CodeMirror {
+    position: relative;
+    overflow: hidden;
+    background: white;
+    border-top: 1px solid #f1f1f1;
+    border-right: 1px solid #f1f1f1;
+    z-index: 10;
+}
+
+.CodeMirror-scroll {
+    overflow: scroll !important; /* Things will break if this is overridden */
+    /* 30px is the magic margin used to hide the element's real scrollbars */
+    /* See overflow: hidden in .CodeMirror */
+    margin-bottom: -30px; margin-right: -30px;
+    padding-bottom: 30px;
+    height: 100%;
+    outline: none; /* Prevent dragging from highlighting the element */
+    position: relative;
+}
+.CodeMirror-sizer {
+    position: relative;
+    border-right: 30px solid transparent;
+}
+
+/* The fake, visible scrollbars. Used to force redraw during scrolling
+   before actual scrolling happens, thus preventing shaking and
+   flickering artifacts. */
+.CodeMirror-vscrollbar, .CodeMirror-hscrollbar, .CodeMirror-scrollbar-filler, .CodeMirror-gutter-filler {
+    position: absolute;
+    z-index: 6;
+    display: none;
+}
+.CodeMirror-vscrollbar {
+    right: 0; top: 0;
+    overflow-x: hidden;
+    overflow-y: scroll;
+}
+.CodeMirror-hscrollbar {
+    bottom: 0; left: 0;
+    overflow-y: hidden;
+    overflow-x: scroll;
+}
+.CodeMirror-scrollbar-filler {
+    right: 0; bottom: 0;
+}
+.CodeMirror-gutter-filler {
+    left: 0; bottom: 0;
+}
+
+.CodeMirror-gutters {
+    position: absolute; left: 0; top: 0;
+    min-height: 100%;
+    z-index: 3;
+}
+.CodeMirror-gutter {
+    white-space: normal;
+    height: 100%;
+    display: inline-block;
+    vertical-align: top;
+    margin-bottom: -30px;
+}
+.CodeMirror-gutter-wrapper {
+    position: absolute;
+    z-index: 4;
+    background: none !important;
+    border: none !important;
+}
+.CodeMirror-gutter-background {
+    position: absolute;
+    top: 0; bottom: 0;
+    z-index: 4;
+}
+.CodeMirror-gutter-elt {
+    position: absolute;
+    cursor: default;
+    z-index: 4;
+}
+.CodeMirror-gutter-wrapper ::selection { background-color: transparent }
+.CodeMirror-gutter-wrapper ::-moz-selection { background-color: transparent }
+
+.CodeMirror-lines {
+    cursor: text;
+    min-height: 1px; /* prevents collapsing before first draw */
+}
+.CodeMirror pre {
+    /* Reset some styles that the rest of the page might have set */
+    -moz-border-radius: 0; -webkit-border-radius: 0; border-radius: 0;
+    border-width: 0;
+    background: transparent;
+    font-family: inherit;
+    font-size: inherit;
+    margin: 0;
+    white-space: pre;
+    word-wrap: normal;
+    line-height: inherit;
+    color: inherit;
+    z-index: 2;
+    position: relative;
+    overflow: visible;
+    -webkit-tap-highlight-color: transparent;
+    -webkit-font-variant-ligatures: contextual;
+    font-variant-ligatures: contextual;
+}
+.CodeMirror-wrap pre {
+    word-wrap: break-word;
+    white-space: pre-wrap;
+    word-break: normal;
+}
+
+.CodeMirror-linebackground {
+    position: absolute;
+    left: 0; right: 0; top: 0; bottom: 0;
+    z-index: 0;
+}
+
+.CodeMirror-linewidget {
+    position: relative;
+    z-index: 2;
+    overflow: auto;
+}
+
+.CodeMirror-widget {}
+
+.CodeMirror-rtl pre { direction: rtl; }
+
+.CodeMirror-code {
+    outline: none;
+}
+
+/* Force content-box sizing for the elements where we expect it */
+.CodeMirror-scroll,
+.CodeMirror-sizer,
+.CodeMirror-gutter,
+.CodeMirror-gutters,
+.CodeMirror-linenumber {
+    -moz-box-sizing: content-box;
+    box-sizing: content-box;
+}
+
+.CodeMirror-measure {
+    position: absolute;
+    width: 100%;
+    height: 0;
+    overflow: hidden;
+    visibility: hidden;
+}
+
+.CodeMirror-cursor {
+    position: absolute;
+    pointer-events: none;
+}
+.CodeMirror-measure pre { position: static; }
+
+div.CodeMirror-cursors {
+    visibility: hidden;
+    position: relative;
+    z-index: 3;
+}
+div.CodeMirror-dragcursors {
+    visibility: visible;
+}
+
+.CodeMirror-focused div.CodeMirror-cursors {
+    visibility: visible;
+}
+
+.CodeMirror-selected { background: #d9d9d9; }
+.CodeMirror-focused .CodeMirror-selected { background: #d7d4f0; }
+.CodeMirror-crosshair { cursor: crosshair; }
+.CodeMirror-line::selection, .CodeMirror-line > span::selection, .CodeMirror-line > span > span::selection { background: #d7d4f0; }
+.CodeMirror-line::-moz-selection, .CodeMirror-line > span::-moz-selection, .CodeMirror-line > span > span::-moz-selection { background: #d7d4f0; }
+
+.cm-searching {
+    background-color: #ffa;
+    background-color: rgba(255, 255, 0, .4);
+}
+
+/* Used to force a border model for a node */
+.cm-force-border { padding-right: .1px; }
+.close_preview {
+    background: #333;
+    color: #fff;
+    position: absolute;
+    z-index: 9999;
+    right: 15px;
+    top: 15px;
+    border: 0;
+    padding: 5px 10px;
+    cursor: pointer;
+}
+@media print {
+    /* Hide the cursor when printing */
+    .CodeMirror div.CodeMirror-cursors {
+        visibility: hidden;
+    }
+}
+
+/* See issue #2901 */
+.cm-tab-wrap-hack:after { content: ''; }
+
+/* Help users use markselection to safely style text background */
+span.CodeMirror-selectedtext { background: none; }
+
+#template div {
+    margin-right: 0 !important;
+}
+
+form#template {
+    padding-right: 20% !important;
+}
+
+/*hide visual editor*/
+#content-tmce, #content-html {
+    display: none;
+}
+
+.wpas-tab {
+    cursor: inherit!important;
+    display: block!important;
+    background: #cc0000!important;
+    color: #f1f1f1!important;
+    font-weight: bold!important;
+    padding: 5px!important;
+    margin-right: 1px!important;
+    opacity: 0.7!important;
+    border-top-left-radius: 10px!important;
+    border-top-right-radius: 10px!important;
+}
+
+#wpas-editor-config {
+    vertical-align: middle;
+    padding: 15px !important;
+    position: absolute;
+    right: 10px;
+    font-size: 18px;
+    z-index: 9999;
+    top: 10px;
+    border-radius: 5px;
+    color: rgba(255,255,255,0.8);
+    background-color: rgba(0,0,0,0.2);
+    cursor: pointer;
+}
+
+#wpas-editor-config:hover {
+    color: rgba(255,255,255,1);
+    background-color: rgba(0,0,0,6);
+
+}
+
+/*hide ED Toolbar*/
+#ed_toolbar {
+    display: none;
+}
+
+button.wpas-button {
+    background: #f1f1f1;
+    color: #333333;
+    border: none;
+    text-shadow: none;
+    box-shadow: none;
+    padding: 5px 10px;
+    border-radius: 5px;
+    margin: 5px 5px;
+}
+
+/*remove default wp editor tools */
+#wp-content-editor-tools { display: none; }
+
+
+.wp-editor-container {
+    clear: both;
+    border: none !important;
+    background-color: transparent;
+}
+.wp-admin select {
+    height: 20px;
+    font-size: 12px;
+    padding: 0;
+}
+#wpas-editor-tools {
+    background: #f1f1f1;
+    color: #333;
+    padding: 10px 0;
+    position: relative;
+    top: 0;
+    z-index: 1;
+    display: block;
+    height: 280px;
+}
+.checkbox.checkbox-slider--b-flat label {
+    height: 25px;
+}
+#wpas-editor-tools label {
+    font-size: 10px;
+    width: 100%;
+    margin: 0px;
+}
+
+#wpas-editor-tools select {
+    width: 100% !important;
+    /*min-width: 100px;*/
+    /*max-width: 300px;*/
+}
+.CodeMirror-gutter-wrapper {
+    left: -50px !important;
+}
+.CodeMirror-linenumber.CodeMirror-gutter-elt {
+    left: 0 !important;
+    width: 21px;
+}
+
+.CodeMirror-gutter-elt {
+    left: 29px!important;
+    width: 10px;!important;
+}
+
+option:checked {
+    color: #555;
+    background-color: #f1f1f1;
+}
+
+.CodeMirror-foldmarker {
+    font-family: arial;
+}
+.CodeMirror-foldgutter {
+    width: .7em;
+}
+.CodeMirror-foldgutter-open,
+.CodeMirror-foldgutter-folded {
+    color: #555;
+    cursor: pointer;
+}
+.CodeMirror-foldgutter-open:after {
+    content: "\25BE";
+}
+.CodeMirror-foldgutter-folded:after {
+    content: "\25B8";
+}
+
+
+#wpas_tools_toggle {
+    text-align: right;
+    position: absolute;
+}
+#wpas_tools_toggle i {
+    color: #f1f1f1;
+    padding: 14px;
+    background-color: #00a0d2;
+    position: relative;
+    top: 5px;
+    z-index: 0;
+    right: 0px;
+    font-size: 20px;
+    cursor: pointer;
+    border-top-left-radius: 5px;
+    border-top-right-radius: 5px;
+}
+#wpas_tools_toggle i:hover #wpas_tools_toggle i{
+    background-color: rgba(0,0,0,0.8);
+}
+
+#wpas_tools_toggle {
+    text-align: unset;
+    position: absolute;
+    right: 1px;
+    top: -50px;
+}
+#wpas_preview {
+    width: 50%;
+    position: fixed;
+    right: 0;
+    top: 0;
+    height: 100%;
+    display: none;
+    border: 1px solid #f1f1f1;
+    margin: 0 0 0 50% ;
+    z-index: 10;
+    background: rgba(255,255,255,1);
+}
+#wpas_preview_toggle {
+    position: absolute;
+    top: -24px;
+    background: #00a0d2;
+    padding: 0 10px;
+    color: #f1f1f1;
+    text-transform: uppercase;
+    cursor: pointer;
+    border-top-left-radius: 5px;
+    border-top-right-radius: 5px;
+}
+#wp-content-editor-container > div.CodeMirror.CodeMirror-wrap.cm-s-material.CodeMirror-fullscreen {
+    width: 50%;
+}
+
+.full-screen.btn.btn-secondary {
+    padding: 0px 10px;
+    line-height: 15px;
+    height: 18px;
+    font-size: 12px;
+    color: #f1f1f1;
+    margin: 0 0 2px 0;
+    cursor: pointer;
+}
+
+.post-type-page .new-post-button {
+    position: absolute;
+    right: 15px;
+    top: 15px;
+    color: #00a0d2;
+    font-size: 12px;
+    background-color: rgba(255,255,255,0.9);
+    padding: 0 10px;
+}
+.post-type-page .new-post-button a {
+    text-decoration: none !important;
+}
+.post-type-page div#wpcontent {
+    position: relative;
+    left: 0;
+    top: 0;
+    margin: 0 !important;
+    padding: 0;
+    float: none;
+    margin-left: 0px !important;
+}
+/*iframe#wpas_preview, div#resizable {*/
+    /*display: inline-block !important;*/
+/*}*/
+.wp-heading-inline,
+a.page-title-action,
+.wrap h1.wp-heading-inline
+{
+    display: none;
+}
+
+.post-type-page div#post {
+    position: relative;
+    top: -20px;
+    margin: 0;
+    padding: 0;
+}
+
+.post-type-page #poststuff {
+    padding-top: 0px;
+    margin-top: -10px;
+    min-width: 763px;
+}
+.post-type-page #titlediv #title-prompt-text {
+    padding: 0px 10px;
+}
+.post-type-page #titlediv {
+    height: 45px;
+}
+.post-type-page #wp-content-wrap {
+   padding-top: 0 !important;
+    margin-top: 45px;
+}
+
+.post-type-page  #edit-slug-box {
+    font-size: 12px;
+}
+
+.post-type-page  #wp-word-count a:hover {
+    color: #f1f1f1;
+}
+
+.post-type-page  #wp-word-count > p {
+    display: inline-block;
+    padding: 0 10px;
+    margin: 0;
+    background: lightgreen;
+    color: #333;
+    border-radius: 5px;
+    margin-left: 5px;
+    top: 1px;
+    position: relative;
+}
+
+.post-type-page #message {
+    position: absolute;
+    width: 350px;
+    z-index: 10;
+    top: 41px;
+    border-left-width: 10px;
+    box-shadow: none;
+    height: 43px;
+}
+
+.post-type-page  .notice-dismiss:focus {
+    outline: 0;
+    -webkit-box-shadow: none;
+    box-shadow: none;
+}
+
+.post-type-page .autosave-info {
+    position: absolute;
+    right: 15px;
+    z-index: 0;
+    bottom: 40px !important;
+    color: rgba(255,255,255,0.4);
+}
+
+.post-type-page #post-body.columns-2 #postbox-container-1 {
+    float: none;
+    margin-right: 0;
+    width: 280px;
+    margin-top: 45px;
+    position: absolute;
+    right: 20px;
+}
+
+.post-type-page #wp-word-count .btn {
+    height: 20px;
+    line-height: 16px;
+    font-size: 12px;
+    padding: 0 10px;
+    color: #fff;
+}
+
+#wp-word-count a {
+    cursor: pointer;
+}
+#wp-word-count {
+    position: relative;
+    z-index: 10;
+}
+#adminmenuback {
+    z-index: 5;
+}
+
+#screen-meta-links {
+    position: absolute;
+    display: block;
+    right: 0;
+}
+
+/*resizable editor for feSpecularLighting*/
+.ui-resizable {
+    position: absolute !important;
+    top: 0;
+    width: 50%;
+    height: 100% !important;
+}
+
+#resizable.CodeMirror { left: 0 !important;}
+#wpas_preview { right: 0 !important;}
+
+.previewFS {
+    display: inline-block !important;
+}
+#wpas_menu_button {
+    height: 33px;
+    background-color: #008EC2;
+    border: none;
+    margin-top: -5px;
+    padding: 0 10px;
+}
+#wpas_menu_button:hover{
+    cursor: pointer;
+}
+#wp-admin-bar-wp-logo .dropdown-menu {
+    transform: none !important;
+}
+#wpas_menu_button:hover {
+    background: #00b9eb;
+    color: #fff;
+}
+.wp-submenu {
+    padding-left: 30px !important;
+}
+#wp-admin-bar-wp-logo > div > ul  {
+    position: absolute !important;
+    top: 32px !important;
+    left: 0 !important;
+    z-index: 10;
+    width: 150px;
+    background-color: #23282D;
+}
+.wp-submenu {
+    display: none;
+}
+.wp-menu-image, .wp-menu-name {
+    display: inline-block;
+    color: #f1f1f1;
+}
+.wp-menu-name:before {
+    margin: 0 5px;
+    content: " ";
+}
+.wp-submenu-head {
+    display: none;
+}
+button#wpas_menu_button:focus {
+    border: none;
+    box-shadow: none;
+}
+#wpadminbar, #wpadminbar * {
+    line-height: 31px;
+}
+body.post-php .wp-submenu {
+    position: absolute !important;
+    width: 120px !important;
+    right: -100% !important;
+    background-color: #23282D !important;
+    text-align: left !important;
+    top: 0;
+}
+@media only screen and (min-width: 766px){
+    .post-type-page div#wpcontent {
+        padding: 0 0 0 5px;
+    }
+    .post-type-page #post-body.columns-2 #postbox-container-1 {
+        float: none;
+        margin-right: 0;
+        width: 0;
+        margin-top: 90px;
+        position: absolute;
+        right: 10px;
+    }
+    #poststuff #post-body.columns-2 #side-sortables {
+        width: 320px;
+        margin-left: 20px;
+    }
+    .postbox {
+        min-width: 225px;
+    }
+    #poststuff #post-body.columns-2 {
+        margin-right: 350px;
+    }
+    .wrap {
+        margin: 10px 0px 0 -1px !important;
+    }
+    .mdtop15 {
+        margin-top: 15px;
+    }
+    #wpas-editor-tools {
+        height: 165px;
+    }
+    #wpbody-content #post-body.columns-2 #postbox-container-1 {
+        float: right;
+        position: relative;
+    }
+    div#postbox-container-2 {
+        float: left;
+    }
+    .post-type-page #wp-word-count .btn {
+        font-size: 12px;
+        padding: 0 5px;
+        margin: 5px 0px;
+    }
+}
+@media only screen and (max-width: 992px){
+    .wrap {
+        margin: 10px 0px 0 3px;
+    }
+}
+@media only screen and (max-width: 765px){
+
+    .post-type-page #poststuff{
+        max-width: 100%;
+        min-width: unset;
+    }
+
+    .post-type-page div#wpcontent {
+        position: relative;
+        float: none;
+        padding: 0 15px;
+        margin: 0 auto !important;
+    }
+    #wpbody .wrap {
+        margin: 10px 0 0 0;
+    }
+    .post-type-page #post-body #postbox-container-1 {
+        position: relative !important;
+    }
+    .post-type-page #post-body.columns-2 #postbox-container-1 {
+        float: left;
+        margin-right: 0;
+        margin-top: 5px;
+        width: 100%;
+        right: unset;
+    }
+    div#wpas_tools_container {
+        display: block;
+        position: relative;
+        float: left;
+        width: 100%;
+        height: 100%;
+    }
+    #wpas-editor-tools {
+        height: 280px;
+    }
+    #wpas_logo {
+        margin: 25px auto 0 auto !important;
+        display: block;
+    }
+    .xsmtop15 {
+        margin-top: 15px;
+    }
+    #wpas-editor-tools label {
+        font-size: 8px;
+    }
+    .visible-xs {
+        display: block !important;
+    }
+    .hidden-xs {
+        display: none !important;
+    }
+    #ve_toggle,
+    #ps_toggle,
+    #ee_toggle {
+        display: none;
+    }
+
+}
+@media only screen and (max-width: 426px){
+    #wpas-editor-tools {
+        height: 230px;
+    }
+    body .xmstop0 {
+        margin-top: 0 !important;
+    }
+    #wpas-editor-tools select {
+        width: 100% !important;
+        font-size: 12px !important;
+        height: 26px !important;
+    }
+}
+
+@media only screen and (min-width: 1200px){
+    .col-lg-14 {
+        width: 14.28% !important;
+        -ms-flex: 0 0 14.28%  !important;
+        flex: 0 0 14.28%  !important;
+        max-width: 14.28% !important;
+    }
+    .mdtop15 {
+        margin-top: 0 !important;
+    }
+    #wpas-editor-tools {
+        height: 100px;
+    }
+}
